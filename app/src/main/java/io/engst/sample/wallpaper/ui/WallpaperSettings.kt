@@ -12,7 +12,6 @@ import android.view.WindowManager
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -103,7 +102,7 @@ fun getCurrentWallpaper(context: Context): ImageBitmap? {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun WallpaperSettings(modifier: Modifier = Modifier, onDismiss: () -> Unit = {}) {
+fun WallpaperSettings(modifier: Modifier = Modifier) {
   val context = LocalContext.current
   val wallpaperSize by remember {
     val windowBounds =
@@ -111,89 +110,94 @@ fun WallpaperSettings(modifier: Modifier = Modifier, onDismiss: () -> Unit = {})
     mutableStateOf(IntSize(windowBounds.width(), windowBounds.height()))
   }
 
-  Box(
-      modifier = modifier.fillMaxSize().clickable(onClick = onDismiss),
-      contentAlignment = Alignment.Center) {
-        Surface(
-            modifier =
-                Modifier.padding(16.dp)
-                    .clickable(indication = null, interactionSource = null, onClick = {}),
-            shape = MaterialTheme.shapes.medium,
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceAround
         ) {
-          Column(
-              modifier = Modifier.padding(16.dp),
-              horizontalAlignment = Alignment.CenterHorizontally,
-              verticalArrangement = Arrangement.SpaceAround) {
-                Text(
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    style = MaterialTheme.typography.titleLarge,
-                    text = "Wallpaper")
+            Text(
+                modifier = Modifier.padding(bottom = 16.dp),
+                style = MaterialTheme.typography.titleLarge,
+                text = "Wallpaper"
+            )
 
-                var imageUri by remember { mutableStateOf(getRandomImageUri(wallpaperSize)) }
-                OutlinedCard(modifier = Modifier.padding(8.dp)) {
-                  val painter = rememberAsyncImagePainter(imageUri)
-                  Box(
-                      modifier = Modifier.fillMaxWidth().height(200.dp),
-                      contentAlignment = Alignment.Center) {
-                        val state by painter.state.collectAsState()
-                        when (state) {
-                          is AsyncImagePainter.State.Empty,
-                          is AsyncImagePainter.State.Loading -> {
+            var imageUri by remember { mutableStateOf(getRandomImageUri(wallpaperSize)) }
+            OutlinedCard(modifier = Modifier.padding(8.dp)) {
+                val painter = rememberAsyncImagePainter(imageUri)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val state by painter.state.collectAsState()
+                    when (state) {
+                        is AsyncImagePainter.State.Empty,
+                        is AsyncImagePainter.State.Loading -> {
                             CircularProgressIndicator()
-                          }
-                          is AsyncImagePainter.State.Success -> {
+                        }
+
+                        is AsyncImagePainter.State.Success -> {
                             Box(modifier = Modifier.fillMaxSize()) {
-                              Image(
-                                  modifier = Modifier.fillMaxSize(),
-                                  contentScale = ContentScale.Crop,
-                                  painter = painter,
-                                  contentDescription = null)
-                              IconButton(
-                                  modifier = Modifier.align(Alignment.TopEnd),
-                                  onClick = { imageUri = getRandomImageUri(wallpaperSize) }) {
+                                Image(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                    painter = painter,
+                                    contentDescription = null
+                                )
+                                IconButton(
+                                    modifier = Modifier.align(Alignment.TopEnd),
+                                    onClick = { imageUri = getRandomImageUri(wallpaperSize) }) {
                                     Icon(
                                         modifier =
-                                            Modifier.clip(CircleShape)
+                                            Modifier
+                                                .clip(CircleShape)
                                                 .background(
-                                                    MaterialTheme.colorScheme.surface.copy(
-                                                        alpha = .5f)),
+                                                    MaterialTheme.colorScheme.surface.copy(alpha = .5f)
+                                                ),
                                         imageVector = Icons.Filled.Refresh,
-                                        contentDescription = null)
-                                  }
-                              Button(
-                                  modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-                                  onClick = { setImageWallpaper(context, painter) }) {
+                                        contentDescription = null
+                                    )
+                                }
+                                Button(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .padding(16.dp),
+                                    onClick = { setImageWallpaper(context, painter) }) {
                                     Text(
                                         style = MaterialTheme.typography.bodyLarge,
-                                        text = "Set image")
-                                  }
+                                        text = "Set image"
+                                    )
+                                }
                             }
-                          }
-                          is AsyncImagePainter.State.Error -> {
-                            error((state as AsyncImagePainter.State.Error).result.throwable) {
-                              "ooh"
-                            }
+                        }
+
+                        is AsyncImagePainter.State.Error -> {
+                            error((state as AsyncImagePainter.State.Error).result.throwable) { "ooh" }
                             Text(
                                 style = MaterialTheme.typography.bodyLarge,
                                 text =
-                                    "Error: ${(state as AsyncImagePainter.State.Error).result.throwable.message}")
-                          }
+                                    "Error: ${(state as AsyncImagePainter.State.Error).result.throwable.message}"
+                            )
                         }
-                      }
+                    }
                 }
+            }
 
-                Button(onClick = { setColorWallpaper(context) }) {
-                  Text(style = MaterialTheme.typography.bodyLarge, text = "Set random color")
-                }
-                Button(onClick = { setLiveWallpaper(context) }) {
-                  Text(style = MaterialTheme.typography.bodyLarge, text = "Set Live wallpaper")
-                }
-                Button(onClick = { WallpaperManager.getInstance(context).clear() }) {
-                  Text(style = MaterialTheme.typography.bodyLarge, text = "Clear")
-                }
-              }
+            Button(onClick = { setColorWallpaper(context) }) {
+                Text(style = MaterialTheme.typography.bodyLarge, text = "Set random color")
+            }
+            Button(onClick = { setLiveWallpaper(context) }) {
+                Text(style = MaterialTheme.typography.bodyLarge, text = "Set Live wallpaper")
+            }
+            Button(onClick = { WallpaperManager.getInstance(context).clear() }) {
+                Text(style = MaterialTheme.typography.bodyLarge, text = "Clear")
+            }
         }
-      }
+    }
 }
 
 @Preview(showBackground = true)
